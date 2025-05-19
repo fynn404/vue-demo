@@ -10,6 +10,7 @@ export interface User {
 export interface LoginForm {
   username: string
   password: string
+  role: 'user' | 'admin'
 }
 
 export interface RegisterForm extends LoginForm {

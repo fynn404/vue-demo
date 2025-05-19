@@ -49,7 +49,7 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !authStore.token) {
     next('/login')
   } else if ((to.name === 'login' || to.name === 'register') && authStore.token) {
-    next('/')
+    next('/todos')
   } else {
     next()
   }

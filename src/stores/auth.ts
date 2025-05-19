@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = data.user
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      router.push('/')
+      router.push('/todos')
     } catch (error) {
       console.error('Login failed:', error)
       throw error

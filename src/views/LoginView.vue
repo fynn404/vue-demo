@@ -14,6 +14,31 @@
           />
         </div>
         <div class="form-group">
+          <label>用户角色</label>
+          <div class="role-selection">
+            <div class="role-option">
+              <input
+                type="radio"
+                id="user"
+                value="user"
+                v-model="form.role"
+                required
+              />
+              <label for="user">普通用户</label>
+            </div>
+            <div class="role-option">
+              <input
+                type="radio"
+                id="admin"
+                value="admin"
+                v-model="form.role"
+                required
+              />
+              <label for="admin">管理员</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
           <label for="password">密码</label>
           <input
             id="password"
@@ -46,7 +71,8 @@ const loading = ref(false)
 const error = ref('')
 const form = ref<LoginForm>({
   username: '',
-  password: ''
+  password: '',
+  role: 'user'
 })
 
 const handleSubmit = async () => {
@@ -141,5 +167,26 @@ button:disabled {
 
 .register-link a:hover {
   text-decoration: underline;
+}
+
+.role-selection {
+  display: flex;
+  gap: 2rem;
+  margin-top: 0.5rem;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.role-option input[type="radio"] {
+  width: auto;
+}
+
+.role-option label {
+  margin-bottom: 0;
+  cursor: pointer;
 }
 </style> 
