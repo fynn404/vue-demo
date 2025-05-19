@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { LoginForm, RegisterForm, User, Todo, CreateTodoForm, UpdateTodoForm, PaginatedResponse, PaginationParams } from '@/types'
+import type { LoginForm, RegisterForm, User, Todo, CreateTodoForm, UpdateTodoForm, PaginatedResponse, PaginationParams, UpdateProfileForm } from '@/types'
 
 interface ApiResponse<T> {
   code: number
@@ -60,7 +60,17 @@ export const users = {
   getAll: () => api.get<ApiResponse<User[]>>('/users'),
   getOne: (id: number) => api.get<ApiResponse<User>>(`/users/${id}`),
   update: (id: number, data: Partial<User>) => api.put<ApiResponse<User>>(`/users/${id}`, data),
-  delete: (id: number) => api.delete(`/users/${id}`)
+  delete: (id: number) => api.delete(`/users/${id}`),
+  updateProfile: (data: UpdateProfileForm) => api.put<ApiResponse<User>>('/users/profile', data),
+  uploadAvatar: (file: File) => {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    return api.post<ApiResponse<{ avatar_url: string }>>('/users/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
 }
 
 // Todo APIs

@@ -4,6 +4,14 @@ export interface User {
   username: string
   email: string
   role: 'user' | 'admin'
+  nickname?: string
+  avatar_url?: string
+  has_change_password?: boolean
+}
+
+export interface UpdateProfileForm {
+  nickname: string
+  email: string
 }
 
 // Auth related types
