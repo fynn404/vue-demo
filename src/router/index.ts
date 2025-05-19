@@ -42,14 +42,20 @@ const router = createRouter({
 })
 
 // Navigation guard
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
+  
+  // Initialize auth store if not already initialized
+  if (!authStore.isInitialized) {
+    authStore.initializeAuth()
+  }
+
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
   if (requiresAuth && !authStore.token) {
     next('/login')
   } else if ((to.name === 'login' || to.name === 'register') && authStore.token) {
-    next('/todos')
+    next('/')
   } else {
     next()
   }

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Todo, CreateTodoForm, UpdateTodoForm } from '@/types'
 import { todos } from '@/services/api'
+import { ElMessage } from 'element-plus'
 
 export const useTodoStore = defineStore('todo', () => {
   const todoList = ref<Todo[]>([])
@@ -40,11 +41,24 @@ export const useTodoStore = defineStore('todo', () => {
   // Create todo
   const createTodo = async (form: CreateTodoForm) => {
     try {
-      const { data } = await todos.create(form)
-      todoList.value.push(data)
-      return data
+      const response = await todos.create(form)
+      if (response.data.code === 200) {
+        const todo = response.data.data.todo
+        todoList.value.push(todo)
+        ElMessage({
+          type: 'success',
+          message: '任务创建成功！'
+        })
+        return todo
+      } else {
+        throw new Error(response.data.message)
+      }
     } catch (error) {
       console.error('Failed to create todo:', error)
+      ElMessage({
+        type: 'error',
+        message: '任务创建失败，请重试'
+      })
       throw error
     }
   }
@@ -52,17 +66,30 @@ export const useTodoStore = defineStore('todo', () => {
   // Update todo
   const updateTodo = async (id: number, form: UpdateTodoForm) => {
     try {
-      const { data } = await todos.update(id, form)
-      const index = todoList.value.findIndex(todo => todo.id === id)
-      if (index !== -1) {
-        todoList.value[index] = data
+      const response = await todos.update(id, form)
+      if (response.data.code === 200) {
+        const todo = response.data.data.todo
+        const index = todoList.value.findIndex(t => t.id === id)
+        if (index !== -1) {
+          todoList.value[index] = todo
+        }
+        if (currentTodo.value?.id === id) {
+          currentTodo.value = todo
+        }
+        ElMessage({
+          type: 'success',
+          message: '任务更新成功！'
+        })
+        return todo
+      } else {
+        throw new Error(response.data.message)
       }
-      if (currentTodo.value?.id === id) {
-        currentTodo.value = data
-      }
-      return data
     } catch (error) {
       console.error(`Failed to update todo ${id}:`, error)
+      ElMessage({
+        type: 'error',
+        message: '任务更新失败，请重试'
+      })
       throw error
     }
   }
@@ -70,13 +97,25 @@ export const useTodoStore = defineStore('todo', () => {
   // Delete todo
   const deleteTodo = async (id: number) => {
     try {
-      await todos.delete(id)
-      todoList.value = todoList.value.filter(todo => todo.id !== id)
-      if (currentTodo.value?.id === id) {
-        currentTodo.value = null
+      const response = await todos.delete(id)
+      if (response.data.code === 200) {
+        todoList.value = todoList.value.filter(todo => todo.id !== id)
+        if (currentTodo.value?.id === id) {
+          currentTodo.value = null
+        }
+        ElMessage({
+          type: 'success',
+          message: '任务删除成功！'
+        })
+      } else {
+        throw new Error(response.data.message)
       }
     } catch (error) {
       console.error(`Failed to delete todo ${id}:`, error)
+      ElMessage({
+        type: 'error',
+        message: '任务删除失败，请重试'
+      })
       throw error
     }
   }
@@ -84,17 +123,30 @@ export const useTodoStore = defineStore('todo', () => {
   // Update todo status
   const updateTodoStatus = async (id: number, status: 'pending' | 'completed') => {
     try {
-      const { data } = await todos.updateStatus(id, status)
-      const index = todoList.value.findIndex(todo => todo.id === id)
-      if (index !== -1) {
-        todoList.value[index] = data
+      const response = await todos.updateStatus(id, status)
+      if (response.data.code === 200) {
+        const todo = response.data.data.todo
+        const index = todoList.value.findIndex(t => t.id === id)
+        if (index !== -1) {
+          todoList.value[index] = todo
+        }
+        if (currentTodo.value?.id === id) {
+          currentTodo.value = todo
+        }
+        ElMessage({
+          type: 'success',
+          message: status === 'completed' ? '任务已完成！' : '任务已重新开始！'
+        })
+        return todo
+      } else {
+        throw new Error(response.data.message)
       }
-      if (currentTodo.value?.id === id) {
-        currentTodo.value = data
-      }
-      return data
     } catch (error) {
       console.error(`Failed to update todo ${id} status:`, error)
+      ElMessage({
+        type: 'error',
+        message: '状态更新失败，请重试'
+      })
       throw error
     }
   }

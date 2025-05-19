@@ -8,9 +8,10 @@ const handleLogout = () => {
   authStore.logout()
 }
 
-onMounted(() => {
+// Initialize auth store
+if (!authStore.isInitialized) {
   authStore.initializeAuth()
-})
+}
 </script>
 
 <template>

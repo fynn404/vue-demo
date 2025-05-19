@@ -81,7 +81,11 @@ const handleSubmit = async () => {
   try {
     await authStore.login(form.value)
   } catch (err) {
-    error.value = '登录失败，请检查用户名和密码'
+    if (err instanceof Error) {
+      error.value = err.message
+    } else {
+      error.value = '登录失败，请稍后重试'
+    }
     console.error('Login error:', err)
   } finally {
     loading.value = false
