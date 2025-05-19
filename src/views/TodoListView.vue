@@ -11,15 +11,29 @@
     <div v-else-if="todoStore.todoList.length === 0" class="empty-state">
       暂无任务，点击"新建任务"按钮创建新的任务
     </div>
-    <div v-else class="todo-items">
-      <TodoItem
-        v-for="todo in todoStore.todoList"
-        :key="todo.id"
-        :todo="todo"
-        @status-change="handleStatusChange"
-        @edit="handleEdit"
-        @delete="handleDelete"
-      />
+    <div v-else>
+      <div class="todo-items">
+        <TodoItem
+          v-for="todo in todoStore.todoList"
+          :key="todo.id"
+          :todo="todo"
+          @status-change="handleStatusChange"
+          @edit="handleEdit"
+          @delete="handleDelete"
+        />
+      </div>
+      
+      <div class="pagination">
+        <el-pagination
+          v-model:current-page="todoStore.currentPage"
+          v-model:page-size="todoStore.pageSize"
+          :total="todoStore.total"
+          :page-sizes="[5, 10, 20, 50]"
+          layout="total, sizes, prev, pager, next"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </div>
 
     <!-- Create/Edit Modal -->
@@ -74,8 +88,8 @@ onMounted(async () => {
   await todoStore.fetchTodos()
 })
 
-const handleStatusChange = async (id: number, status: 'pending' | 'completed') => {
-  await todoStore.updateTodoStatus(id, status)
+const handleStatusChange = async (id: number, completed: boolean) => {
+  await todoStore.updateTodoStatus(id, completed)
 }
 
 const handleEdit = (todo: Todo) => {
@@ -112,6 +126,14 @@ const closeModal = () => {
     title: '',
     description: ''
   }
+}
+
+const handleSizeChange = async (size: number) => {
+  await todoStore.fetchTodos({ page: 1, size })
+}
+
+const handleCurrentChange = async (page: number) => {
+  await todoStore.fetchTodos({ page, size: todoStore.pageSize })
 }
 </script>
 
@@ -150,6 +172,13 @@ const closeModal = () => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
 }
 
 .modal {

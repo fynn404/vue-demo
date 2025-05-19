@@ -41,6 +41,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTodoStore } from '@/stores/todo'
+import { ElMessage } from 'element-plus'
 
 const authStore = useAuthStore()
 const todoStore = useTodoStore()
@@ -50,10 +51,14 @@ const completedTodos = ref(0)
 onMounted(async () => {
   try {
     await todoStore.fetchTodos()
-    pendingTodos.value = todoStore.todoList.filter((todo: { status: string }) => todo.status === 'pending').length
-    completedTodos.value = todoStore.todoList.filter((todo: { status: string }) => todo.status === 'completed').length
+    pendingTodos.value = todoStore.todoList.filter(todo => !todo.completed).length
+    completedTodos.value = todoStore.todoList.filter(todo => todo.completed).length
   } catch (error) {
     console.error('Failed to fetch todos:', error)
+    ElMessage({
+      type: 'error',
+      message: '获取任务统计失败'
+    })
   }
 })
 </script>

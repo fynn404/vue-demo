@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Todo, CreateTodoForm, UpdateTodoForm } from '@/types'
+import type { Todo, CreateTodoForm, UpdateTodoForm, PaginationParams } from '@/types'
 import { todos } from '@/services/api'
 import { ElMessage } from 'element-plus'
 
@@ -8,15 +8,32 @@ export const useTodoStore = defineStore('todo', () => {
   const todoList = ref<Todo[]>([])
   const currentTodo = ref<Todo | null>(null)
   const loading = ref(false)
+  const total = ref(0)
+  const currentPage = ref(1)
+  const pageSize = ref(10)
 
-  // Get all todos
-  const fetchTodos = async () => {
+  // Get all todos with pagination
+  const fetchTodos = async (params?: Partial<PaginationParams>) => {
     loading.value = true
     try {
-      const { data } = await todos.getAll()
-      todoList.value = data
+      const response = await todos.getAll({
+        page: params?.page || currentPage.value,
+        size: params?.size || pageSize.value
+      })
+      if (response.data.code === 200) {
+        todoList.value = response.data.data.todos || []
+        total.value = response.data.data.total
+        if (params?.page) currentPage.value = params.page
+        if (params?.size) pageSize.value = params.size
+      } else {
+        throw new Error(response.data.message)
+      }
     } catch (error) {
       console.error('Failed to fetch todos:', error)
+      ElMessage({
+        type: 'error',
+        message: '获取任务列表失败，请重试'
+      })
       throw error
     } finally {
       loading.value = false
@@ -27,11 +44,19 @@ export const useTodoStore = defineStore('todo', () => {
   const fetchTodo = async (id: number) => {
     loading.value = true
     try {
-      const { data } = await todos.getOne(id)
-      currentTodo.value = data
-      return data
+      const response = await todos.getOne(id)
+      if (response.data.code === 200) {
+        currentTodo.value = response.data.data.todo
+        return response.data.data.todo
+      } else {
+        throw new Error(response.data.message)
+      }
     } catch (error) {
       console.error(`Failed to fetch todo ${id}:`, error)
+      ElMessage({
+        type: 'error',
+        message: '获取任务详情失败，请重试'
+      })
       throw error
     } finally {
       loading.value = false
@@ -44,7 +69,7 @@ export const useTodoStore = defineStore('todo', () => {
       const response = await todos.create(form)
       if (response.data.code === 200) {
         const todo = response.data.data.todo
-        todoList.value.push(todo)
+        await fetchTodos({ page: currentPage.value, size: pageSize.value })
         ElMessage({
           type: 'success',
           message: '任务创建成功！'
@@ -69,10 +94,7 @@ export const useTodoStore = defineStore('todo', () => {
       const response = await todos.update(id, form)
       if (response.data.code === 200) {
         const todo = response.data.data.todo
-        const index = todoList.value.findIndex(t => t.id === id)
-        if (index !== -1) {
-          todoList.value[index] = todo
-        }
+        await fetchTodos({ page: currentPage.value, size: pageSize.value })
         if (currentTodo.value?.id === id) {
           currentTodo.value = todo
         }
@@ -99,7 +121,7 @@ export const useTodoStore = defineStore('todo', () => {
     try {
       const response = await todos.delete(id)
       if (response.data.code === 200) {
-        todoList.value = todoList.value.filter(todo => todo.id !== id)
+        await fetchTodos({ page: currentPage.value, size: pageSize.value })
         if (currentTodo.value?.id === id) {
           currentTodo.value = null
         }
@@ -121,21 +143,18 @@ export const useTodoStore = defineStore('todo', () => {
   }
 
   // Update todo status
-  const updateTodoStatus = async (id: number, status: 'pending' | 'completed') => {
+  const updateTodoStatus = async (id: number, completed: boolean) => {
     try {
-      const response = await todos.updateStatus(id, status)
+      const response = await todos.updateStatus(id, completed)
       if (response.data.code === 200) {
         const todo = response.data.data.todo
-        const index = todoList.value.findIndex(t => t.id === id)
-        if (index !== -1) {
-          todoList.value[index] = todo
-        }
+        await fetchTodos({ page: currentPage.value, size: pageSize.value })
         if (currentTodo.value?.id === id) {
           currentTodo.value = todo
         }
         ElMessage({
           type: 'success',
-          message: status === 'completed' ? '任务已完成！' : '任务已重新开始！'
+          message: completed ? '任务已完成！' : '任务已重新开始！'
         })
         return todo
       } else {
@@ -155,6 +174,9 @@ export const useTodoStore = defineStore('todo', () => {
     todoList,
     currentTodo,
     loading,
+    total,
+    currentPage,
+    pageSize,
     fetchTodos,
     fetchTodo,
     createTodo,

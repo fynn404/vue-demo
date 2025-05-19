@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { LoginForm, RegisterForm, User, Todo, CreateTodoForm, UpdateTodoForm } from '@/types'
+import type { LoginForm, RegisterForm, User, Todo, CreateTodoForm, UpdateTodoForm, PaginatedResponse, PaginationParams } from '@/types'
 
 interface ApiResponse<T> {
   code: number
@@ -15,6 +15,7 @@ interface LoginResponseData {
 
 const api = axios.create({
   baseURL: 'http://localhost:9527/api/v1',
+  timeout: 5000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -30,6 +31,19 @@ api.interceptors.request.use(
     return config
   },
   (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// Response interceptor
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.href = '/login'
+    }
     return Promise.reject(error)
   }
 )
@@ -51,13 +65,13 @@ export const users = {
 
 // Todo APIs
 export const todos = {
-  getAll: () => api.get<ApiResponse<Todo[]>>('/todos'),
-  create: (data: CreateTodoForm) => api.post<ApiResponse<Todo>>('/todos', data),
-  getOne: (id: number) => api.get<ApiResponse<Todo>>(`/todos/${id}`),
-  update: (id: number, data: UpdateTodoForm) => api.put<ApiResponse<Todo>>(`/todos/${id}`, data),
-  delete: (id: number) => api.delete(`/todos/${id}`),
-  updateStatus: (id: number, status: 'pending' | 'completed') =>
-    api.patch<ApiResponse<Todo>>(`/todos/${id}/status`, { status })
+  getAll: (params: PaginationParams) => api.get<ApiResponse<PaginatedResponse<Todo>>>('/todos', { params }),
+  create: (data: CreateTodoForm) => api.post<ApiResponse<{ todo: Todo }>>('/todos', data),
+  getOne: (id: number) => api.get<ApiResponse<{ todo: Todo }>>(`/todos/${id}`),
+  update: (id: number, data: UpdateTodoForm) => api.put<ApiResponse<{ todo: Todo }>>(`/todos/${id}`, data),
+  delete: (id: number) => api.delete<ApiResponse<null>>(`/todos/${id}`),
+  updateStatus: (id: number, completed: boolean) =>
+    api.patch<ApiResponse<{ todo: Todo }>>(`/todos/${id}/status`, { completed })
 }
 
 export default api 

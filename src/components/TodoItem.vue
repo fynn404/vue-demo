@@ -1,10 +1,10 @@
 <template>
-  <div class="todo-item" :class="{ 'completed': todo.status === 'completed' }">
+  <div class="todo-item" :class="{ 'completed': todo.completed }">
     <div class="todo-content">
       <input
         type="checkbox"
-        :checked="todo.status === 'completed'"
-        @change="$emit('statusChange', todo.id, todo.status === 'completed' ? 'pending' : 'completed')"
+        :checked="todo.completed"
+        @change="$emit('statusChange', todo.id, !todo.completed)"
       />
       <div class="todo-text">
         <h3>{{ todo.title }}</h3>
@@ -26,7 +26,7 @@ defineProps<{
 }>()
 
 defineEmits<{
-  (e: 'statusChange', id: number, status: 'pending' | 'completed'): void
+  (e: 'statusChange', id: number, completed: boolean): void
   (e: 'edit', todo: Todo): void
   (e: 'delete', id: number): void
 }>()

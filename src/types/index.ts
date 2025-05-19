@@ -23,10 +23,12 @@ export interface Todo {
   id: number
   title: string
   description: string
-  status: 'pending' | 'completed'
+  completed: boolean
   createdAt: string
   updatedAt: string
   userId: number
+  priority: 'low' | 'medium' | 'high'
+  dueDate?: string
 }
 
 export interface CreateTodoForm {
@@ -35,5 +37,15 @@ export interface CreateTodoForm {
 }
 
 export interface UpdateTodoForm extends Partial<CreateTodoForm> {
-  status?: 'pending' | 'completed'
+  completed?: boolean
+}
+
+export interface PaginatedResponse<T> {
+  total: number
+  todos: T[]
+}
+
+export interface PaginationParams {
+  page: number
+  size: number
 } 

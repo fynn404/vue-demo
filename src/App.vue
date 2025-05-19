@@ -1,11 +1,27 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { ElMessageBox } from 'element-plus'
 
 const authStore = useAuthStore()
 
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要退出登录吗？',
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    await authStore.logout()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Logout error:', error)
+    }
+  }
 }
 
 // Initialize auth store

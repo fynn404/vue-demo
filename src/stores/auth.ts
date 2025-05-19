@@ -4,6 +4,7 @@ import type { User, LoginForm, RegisterForm } from '@/types'
 import { auth } from '@/services/api'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 interface LoginResponseData {
   user_id: string
@@ -114,15 +115,28 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Logout
-  const logout = () => {
+  const logout = async () => {
     try {
-      user.value = null
-      token.value = null
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      router.push('/login')
+      const response = await auth.logout()
+      if (response.data.code === 200) {
+        user.value = null
+        token.value = null
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        router.push('/login')
+        ElMessage({
+          type: 'success',
+          message: '退出登录成功'
+        })
+      } else {
+        throw new Error(response.data.message)
+      }
     } catch (error) {
       console.error('Logout failed:', error)
+      ElMessage({
+        type: 'error',
+        message: '退出登录失败，请重试'
+      })
       throw error
     }
   }
