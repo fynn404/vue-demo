@@ -42,10 +42,12 @@ export interface Todo {
 export interface CreateTodoForm {
   title: string
   description: string
+  priority: 'low' | 'medium' | 'high'
 }
 
 export interface UpdateTodoForm extends Partial<CreateTodoForm> {
   completed?: boolean
+  priority?: 'low' | 'medium' | 'high'
 }
 
 export interface PaginatedResponse<T> {

@@ -75,13 +75,77 @@ export const users = {
 
 // Todo APIs
 export const todos = {
-  getAll: (params: PaginationParams) => api.get<ApiResponse<PaginatedResponse<Todo>>>('/todos', { params }),
-  create: (data: CreateTodoForm) => api.post<ApiResponse<{ todo: Todo }>>('/todos', data),
-  getOne: (id: number) => api.get<ApiResponse<{ todo: Todo }>>(`/todos/${id}`),
-  update: (id: number, data: UpdateTodoForm) => api.put<ApiResponse<{ todo: Todo }>>(`/todos/${id}`, data),
-  delete: (id: number) => api.delete<ApiResponse<null>>(`/todos/${id}`),
-  updateStatus: (id: number, completed: boolean) =>
-    api.patch<ApiResponse<{ todo: Todo }>>(`/todos/${id}/status`, { completed })
+  getAll: async (params: PaginationParams) => {
+    try {
+      console.log('API: Getting all todos with params:', params)
+      const response = await api.get<ApiResponse<PaginatedResponse<Todo>>>('/todos', { params })
+      console.log('API: Get all todos response:', response.data)
+      return response
+    } catch (error) {
+      console.error('API: Failed to get all todos:', error)
+      throw error
+    }
+  },
+  
+  getOne: async (id: number) => {
+    try {
+      console.log('API: Getting todo:', id)
+      const response = await api.get<ApiResponse<{ todo: Todo }>>(`/todos/${id}`)
+      console.log('API: Get todo response:', response.data)
+      return response
+    } catch (error) {
+      console.error(`API: Failed to get todo ${id}:`, error)
+      throw error
+    }
+  },
+  
+  create: async (data: CreateTodoForm) => {
+    try {
+      console.log('API: Creating todo:', data)
+      const response = await api.post<ApiResponse<{ todo: Todo }>>('/todos', data)
+      console.log('API: Create todo response:', response.data)
+      return response
+    } catch (error) {
+      console.error('API: Failed to create todo:', error)
+      throw error
+    }
+  },
+  
+  update: async (id: number, data: UpdateTodoForm) => {
+    try {
+      console.log('API: Updating todo:', id, data)
+      const response = await api.put<ApiResponse<{ todo: Todo }>>(`/todos/${id}`, data)
+      console.log('API: Update todo response:', response.data)
+      return response
+    } catch (error) {
+      console.error(`API: Failed to update todo ${id}:`, error)
+      throw error
+    }
+  },
+  
+  delete: async (id: number) => {
+    try {
+      console.log('API: Deleting todo:', id)
+      const response = await api.delete<ApiResponse<void>>(`/todos/${id}`)
+      console.log('API: Delete todo response:', response.data)
+      return response
+    } catch (error) {
+      console.error(`API: Failed to delete todo ${id}:`, error)
+      throw error
+    }
+  },
+  
+  updateStatus: async (id: number, completed: boolean) => {
+    try {
+      console.log('API: Updating todo status:', id, completed)
+      const response = await api.patch<ApiResponse<{ todo: Todo }>>(`/todos/${id}/status`, { completed })
+      console.log('API: Update todo status response:', response.data)
+      return response
+    } catch (error) {
+      console.error(`API: Failed to update todo status ${id}:`, error)
+      throw error
+    }
+  }
 }
 
 export default api 

@@ -62,42 +62,53 @@ import type { UpdateProfileForm } from '@/types'
 import { ElMessage } from 'element-plus'
 import { users } from '@/services/api'
 
+// 获取认证状态管理store
 const authStore = useAuthStore()
+// 控制加载状态
 const loading = ref(false)
+// 文件输入框的引用，用于触发文件选择
 const fileInput = ref<HTMLInputElement | null>(null)
+// 存储头像预览的临时URL
 const previewUrl = ref<string>('')
 
-// Add computed property for full avatar URL
+// 计算属性：处理头像完整URL的显示逻辑
 const fullAvatarUrl = computed(() => {
+  // 如果有预览图片（新上传的图片），优先显示预览图
   if (previewUrl.value) {
     return previewUrl.value
   }
+  // 获取用户当前的头像路径
   const avatarPath = authStore.user?.avatar_url
+  // 如果没有头像路径，显示默认头像
   if (!avatarPath) {
     return '/default-avatar.png'
   }
-  // If the avatar path is already a full URL, return it as is
+  // 如果头像路径已经是完整的URL（以http开头），直接返回
   if (avatarPath.startsWith('http')) {
     return avatarPath
   }
-  // Otherwise, prepend the API base URL
+  // 否则，将API基础URL与头像路径拼接，构建完整URL
   return `http://localhost:9527${avatarPath}`
 })
 
+// 表单数据，初始化为当前用户信息
 const form = ref<UpdateProfileForm>({
   nickname: authStore.user?.nickname || authStore.user?.username || '',
   email: authStore.user?.email || ''
 })
 
+// 触发文件选择框点击事件
 const triggerFileInput = () => {
   fileInput.value?.click()
 }
 
+// 处理文件选择变更事件
 const handleFileChange = async (event: Event) => {
   const input = event.target as HTMLInputElement
   if (!input.files?.length) return
 
   const file = input.files[0]
+  // 验证是否为图片文件
   if (!file.type.startsWith('image/')) {
     ElMessage({
       type: 'error',
@@ -106,19 +117,22 @@ const handleFileChange = async (event: Event) => {
     return
   }
 
-  // Create preview URL
+  // 创建本地预览URL
   previewUrl.value = URL.createObjectURL(file)
 
   try {
     loading.value = true
+    // 调用上传头像API
     const response = await users.uploadAvatar(file)
     
     if (response.data.code === 200) {
+      // 上传成功后更新用户信息中的头像URL
       if (authStore.user) {
         authStore.user = {
           ...authStore.user,
           avatar_url: response.data.data.avatar_url
         }
+        // 更新本地存储的用户信息
         localStorage.setItem('user', JSON.stringify(authStore.user))
       }
       ElMessage({
@@ -134,19 +148,21 @@ const handleFileChange = async (event: Event) => {
       type: 'error',
       message: '头像上传失败，请重试'
     })
-    // Revert preview to original avatar
+    // 上传失败时清除预览图
     previewUrl.value = ''
   } finally {
     loading.value = false
   }
 }
 
+// 处理表单提交
 const handleSubmit = async () => {
   loading.value = true
   try {
+    // 调用更新个人信息API
     const response = await users.updateProfile(form.value)
     if (response.data.code === 200) {
-      // Update the user info in auth store
+      // 更新成功后更新本地用户信息
       if (authStore.user) {
         authStore.user = {
           ...authStore.user,
@@ -154,7 +170,7 @@ const handleSubmit = async () => {
           email: response.data.data.email,
           avatar_url: response.data.data.avatar_url
         }
-        // Update local storage
+        // 更新本地存储
         localStorage.setItem('user', JSON.stringify(authStore.user))
       }
       ElMessage({
@@ -175,7 +191,7 @@ const handleSubmit = async () => {
   }
 }
 
-// Clean up preview URL when component is unmounted
+// 组件卸载时清理预览URL，释放内存
 onMounted(() => {
   return () => {
     if (previewUrl.value) {

@@ -38,9 +38,14 @@
     </div>
 
     <!-- Edit Modal -->
-    <div v-if="showEditModal" class="modal">
+    <el-dialog
+      v-model="showEditModal"
+      title="编辑任务"
+      width="50%"
+      :close-on-click-modal="false"
+      @close="showEditModal = false"
+    >
       <div class="modal-content">
-        <h2>编辑任务</h2>
         <form @submit.prevent="handleSubmit">
           <div class="form-group">
             <label for="title">标题</label>
@@ -61,13 +66,21 @@
               placeholder="请输入任务描述"
             ></textarea>
           </div>
+          <div class="form-group">
+            <label for="priority">优先级</label>
+            <el-select v-model="form.priority" placeholder="请选择优先级">
+              <el-option label="高优先级" value="high" />
+              <el-option label="中优先级" value="medium" />
+              <el-option label="低优先级" value="low" />
+            </el-select>
+          </div>
           <div class="modal-actions">
-            <button type="button" @click="showEditModal = false" class="btn-cancel">取消</button>
-            <button type="submit" class="btn-submit">保存</button>
+            <el-button @click="showEditModal = false">取消</el-button>
+            <el-button type="primary" native-type="submit">保存</el-button>
           </div>
         </form>
       </div>
-    </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -76,6 +89,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTodoStore } from '@/stores/todo'
 import type { CreateTodoForm } from '@/types'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
@@ -83,7 +97,8 @@ const todoStore = useTodoStore()
 const showEditModal = ref(false)
 const form = ref<CreateTodoForm>({
   title: '',
-  description: ''
+  description: '',
+  priority: 'medium'
 })
 
 onMounted(async () => {
@@ -93,7 +108,8 @@ onMounted(async () => {
     if (todoStore.currentTodo) {
       form.value = {
         title: todoStore.currentTodo.title,
-        description: todoStore.currentTodo.description
+        description: todoStore.currentTodo.description,
+        priority: todoStore.currentTodo.priority
       }
     }
   }
@@ -109,7 +125,8 @@ const handleEdit = () => {
   if (!todoStore.currentTodo) return
   form.value = {
     title: todoStore.currentTodo.title,
-    description: todoStore.currentTodo.description
+    description: todoStore.currentTodo.description,
+    priority: todoStore.currentTodo.priority
   }
   showEditModal.value = true
 }
@@ -127,8 +144,16 @@ const handleSubmit = async () => {
   try {
     await todoStore.updateTodo(todoStore.currentTodo.id, form.value)
     showEditModal.value = false
+    ElMessage({
+      type: 'success',
+      message: '任务更新成功！'
+    })
   } catch (error) {
     console.error('Failed to update todo:', error)
+    ElMessage({
+      type: 'error',
+      message: '任务更新失败，请重试'
+    })
   }
 }
 </script>
