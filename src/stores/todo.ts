@@ -5,26 +5,31 @@ import { todos } from '@/services/api'
 import { ElMessage } from 'element-plus'
 
 export const useTodoStore = defineStore('todo', () => {
-  const todoList = ref<Todo[]>([])
-  const currentTodo = ref<Todo | null>(null)
-  const loading = ref(false)
-  const total = ref(0)
-  const currentPage = ref(1)
-  const pageSize = ref(10)
+  // 状态定义
+  const todoList = ref<Todo[]>([])      // 任务列表
+  const currentTodo = ref<Todo | null>(null) // 当前选中的任务
+  const loading = ref(false)            // 加载状态
+  const total = ref(0)                  // 总任务数
+  const currentPage = ref(1)            // 当前页码
+  const pageSize = ref(10)              // 每页显示数量
 
-  // Get all todos with pagination
+  // 获取任务列表（支持分页）
   const fetchTodos = async (params?: Partial<PaginationParams>) => {
     loading.value = true
     try {
       console.log('Fetching todos with params:', params)
+      // 调用API获取任务列表，使用当前页码和每页数量，或使用传入的参数
       const response = await todos.getAll({
         page: params?.page || currentPage.value,
         size: params?.size || pageSize.value
       })
       console.log('Fetch todos response:', response.data)
+      
       if (response.data.code === 200) {
+        // 更新状态
         todoList.value = response.data.data.todos || []
         total.value = response.data.data.total
+        // 更新分页参数
         if (params?.page) currentPage.value = params.page
         if (params?.size) pageSize.value = params.size
       } else {
@@ -42,13 +47,14 @@ export const useTodoStore = defineStore('todo', () => {
     }
   }
 
-  // Get single todo
+  // 获取单个任务详情
   const fetchTodo = async (id: number) => {
     loading.value = true
     try {
       console.log('Fetching single todo:', id)
       const response = await todos.getOne(id)
       console.log('Fetch single todo response:', response.data)
+      
       if (response.data.code === 200) {
         currentTodo.value = response.data.data.todo
         return response.data.data.todo
@@ -67,14 +73,16 @@ export const useTodoStore = defineStore('todo', () => {
     }
   }
 
-  // Create todo
+  // 创建新任务
   const createTodo = async (form: CreateTodoForm) => {
     try {
       console.log('Creating todo with form:', form)
       const response = await todos.create(form)
       console.log('Create todo response:', response.data)
+      
       if (response.data.code === 200) {
         const todo = response.data.data.todo
+        // 重新获取列表以确保数据同步
         await fetchTodos({ page: currentPage.value, size: pageSize.value })
         ElMessage({
           type: 'success',
@@ -94,20 +102,21 @@ export const useTodoStore = defineStore('todo', () => {
     }
   }
 
-  // Update todo
+  // 更新任务
   const updateTodo = async (id: number, form: UpdateTodoForm) => {
     try {
       console.log('Updating todo:', id, 'with form:', form)
       const response = await todos.update(id, form)
       console.log('Update todo response:', response.data)
+      
       if (response.data.code === 200) {
         const todo = response.data.data.todo
-        // Update the todo in the list
+        // 更新本地列表中的任务
         const index = todoList.value.findIndex(t => t.id === id)
         if (index !== -1) {
-          todoList.value[index] = todo // Use the complete todo from response
+          todoList.value[index] = todo
         }
-        // Update current todo if it's the one being edited
+        // 如果更新的是当前选中的任务，也更新它
         if (currentTodo.value?.id === id) {
           currentTodo.value = todo
         }
@@ -129,16 +138,17 @@ export const useTodoStore = defineStore('todo', () => {
     }
   }
 
-  // Delete todo
+  // 删除任务
   const deleteTodo = async (id: number) => {
     try {
       console.log('Deleting todo:', id)
       const response = await todos.delete(id)
       console.log('Delete todo response:', response.data)
+      
       if (response.data.code === 200) {
-        // 从本地列表中移除
+        // 从本地列表中移除任务
         todoList.value = todoList.value.filter(todo => todo.id !== id)
-        // 如果是当前选中的todo，清除它
+        // 如果删除的是当前选中的任务，清除它
         if (currentTodo.value?.id === id) {
           currentTodo.value = null
         }
@@ -161,20 +171,21 @@ export const useTodoStore = defineStore('todo', () => {
     }
   }
 
-  // Update todo status
+  // 更新任务状态（完成/未完成）
   const updateTodoStatus = async (id: number, completed: boolean) => {
     try {
       console.log('Updating todo status:', id, completed)
       const response = await todos.updateStatus(id, completed)
       console.log('Update todo status response:', response.data)
+      
       if (response.data.code === 200) {
         const todo = response.data.data.todo
-        // 更新本地列表中的对应项
+        // 更新本地列表中的任务状态
         const index = todoList.value.findIndex(t => t.id === id)
         if (index !== -1) {
           todoList.value[index] = { ...todoList.value[index], completed }
         }
-        // 如果是当前选中的todo，也更新它
+        // 如果更新的是当前选中的任务，也更新它的状态
         if (currentTodo.value?.id === id) {
           currentTodo.value = { ...currentTodo.value, completed }
         }
@@ -198,6 +209,7 @@ export const useTodoStore = defineStore('todo', () => {
     }
   }
 
+  // 返回store的公共接口
   return {
     todoList,
     currentTodo,

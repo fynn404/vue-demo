@@ -39,30 +39,39 @@
 import { computed } from 'vue'
 import type { Todo } from '@/types'
 
+// 组件属性：接收一个任务对象
 const props = defineProps<{
   todo: Todo
 }>()
 
+// 定义组件可以触发的事件
 const emit = defineEmits<{
+  // 状态变更事件：切换任务完成状态
   (e: 'statusChange', id: number, completed: boolean): void
+  // 编辑事件：编辑任务
   (e: 'edit', todo: Todo): void
+  // 删除事件：删除任务
   (e: 'delete', id: number): void
+  // 点击事件：查看任务详情
   (e: 'click', todo: Todo): void
 }>()
 
+// 处理任务项点击
+// 只有在点击非按钮和非内容区域时才触发详情查看
 const handleItemClick = (event: MouseEvent) => {
-  // 确保点击不是来自按钮或其他控件
   const target = event.target as HTMLElement
   if (!target.closest('.todo-content') && !target.closest('.todo-actions')) {
     emit('click', props.todo)
   }
 }
 
+// 处理编辑按钮点击
 const handleEditClick = () => {
   console.log('Edit clicked:', props.todo)
   emit('edit', props.todo)
 }
 
+// 计算优先级显示文本
 const priorityText = computed(() => {
   const priorityMap = {
     high: '高优先级',
@@ -74,6 +83,7 @@ const priorityText = computed(() => {
 </script>
 
 <style scoped>
+/* 任务项容器样式 */
 .todo-item {
   display: flex;
   justify-content: space-between;
@@ -88,11 +98,13 @@ const priorityText = computed(() => {
   position: relative;
 }
 
+/* 悬停效果 */
 .todo-item:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* 任务内容区域样式 */
 .todo-content {
   display: flex;
   align-items: flex-start;
@@ -106,6 +118,7 @@ const priorityText = computed(() => {
   flex: 1;
 }
 
+/* 任务标题区域样式 */
 .todo-header {
   display: flex;
   align-items: center;
@@ -119,6 +132,7 @@ const priorityText = computed(() => {
   color: #333;
 }
 
+/* 优先级标签样式 */
 .priority-badge {
   display: flex;
   align-items: center;
@@ -129,6 +143,7 @@ const priorityText = computed(() => {
   font-weight: 500;
 }
 
+/* 不同优先级的颜色 */
 .priority-badge.high {
   background-color: #fef2f2;
   color: #ef4444;
@@ -144,18 +159,21 @@ const priorityText = computed(() => {
   color: #22c55e;
 }
 
+/* 任务描述样式 */
 .todo-text p {
   margin: 0.5rem 0 0;
   color: #666;
   font-size: 0.9rem;
 }
 
+/* 操作按钮区域样式 */
 .todo-actions {
   display: flex;
   gap: 0.5rem;
   z-index: 2;
 }
 
+/* 已完成任务的样式 */
 .completed {
   opacity: 0.7;
 }

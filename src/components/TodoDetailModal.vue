@@ -53,16 +53,21 @@
 import { computed } from 'vue'
 import type { Todo } from '@/types'
 
+// 组件属性定义
 const props = defineProps<{
-  visible: boolean
-  todo: Todo | null
+  visible: boolean  // 控制弹窗显示/隐藏
+  todo: Todo | null // 要显示的任务详情
 }>()
 
+// 定义组件可以触发的事件
 const emit = defineEmits<{
+  // 关闭事件
   (e: 'close'): void
+  // 更新visible属性的事件（用于v-model绑定）
   (e: 'update:visible', value: boolean): void
 }>()
 
+// 获取优先级的显示文本
 const getPriorityText = (priority?: 'low' | 'medium' | 'high') => {
   const priorityMap = {
     high: '高优先级',
@@ -72,6 +77,7 @@ const getPriorityText = (priority?: 'low' | 'medium' | 'high') => {
   return priority ? priorityMap[priority] : ''
 }
 
+// 格式化日期显示
 const formatDate = (dateString?: string) => {
   if (!dateString) return ''
   return new Date(dateString).toLocaleString('zh-CN', {
@@ -85,16 +91,19 @@ const formatDate = (dateString?: string) => {
 </script>
 
 <style scoped>
+/* 详情内容容器 */
 .todo-detail {
   padding: 1rem;
 }
 
+/* 详情头部区域 */
 .detail-header {
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
 }
 
+/* 优先级标签样式 */
 .priority-badge {
   display: inline-flex;
   align-items: center;
@@ -104,6 +113,7 @@ const formatDate = (dateString?: string) => {
   font-weight: 500;
 }
 
+/* 不同优先级的颜色 */
 .priority-badge.high {
   background-color: #fef2f2;
   color: #ef4444;
@@ -119,6 +129,7 @@ const formatDate = (dateString?: string) => {
   color: #22c55e;
 }
 
+/* 状态标签样式 */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -130,11 +141,13 @@ const formatDate = (dateString?: string) => {
   color: #4b5563;
 }
 
+/* 已完成状态样式 */
 .status-badge.completed {
   background-color: #f0fdf4;
   color: #22c55e;
 }
 
+/* 详情区块样式 */
 .detail-section {
   margin-bottom: 1.5rem;
 }
@@ -151,6 +164,7 @@ const formatDate = (dateString?: string) => {
   margin: 0;
 }
 
+/* 时间信息样式 */
 .time-info {
   display: flex;
   flex-direction: column;
@@ -162,6 +176,7 @@ const formatDate = (dateString?: string) => {
   font-size: 0.9rem;
 }
 
+/* 弹窗底部按钮区域 */
 .dialog-footer {
   display: flex;
   justify-content: flex-end;

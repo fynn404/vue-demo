@@ -101,18 +101,22 @@ import TodoDetailModal from '@/components/TodoDetailModal.vue'
 import type { Todo, CreateTodoForm } from '@/types'
 import { ElMessage } from 'element-plus'
 
+// 初始化 store 和状态
 const todoStore = useTodoStore()
 const showCreateModal = ref(false)
 const showDetailModal = ref(false)
 const editingTodo = ref<Todo | null>(null)
 const selectedTodo = ref<Todo | null>(null)
+
+// 表单数据，用于创建和编辑任务
 const form = ref<CreateTodoForm>({
   title: '',
   description: '',
   priority: 'medium' // 默认中优先级
 })
 
-// 按优先级排序的计算属性
+// 按优先级对任务进行排序
+// high: 3分，medium: 2分，low: 1分，分数高的排在前面
 const sortedTodos = computed(() => {
   const priorityOrder = { high: 3, medium: 2, low: 1 }
   return [...todoStore.todoList].sort((a, b) => {
@@ -120,17 +124,20 @@ const sortedTodos = computed(() => {
   })
 })
 
+// 组件挂载时获取任务列表
 onMounted(async () => {
   await todoStore.fetchTodos()
 })
 
+// 处理任务状态变更（完成/未完成）
 const handleStatusChange = async (id: number, completed: boolean) => {
   await todoStore.updateTodoStatus(id, completed)
 }
 
+// 处理任务点击，显示任务详情
 const handleTodoClick = async (todo: Todo) => {
   try {
-    // 获取最新的todo详情
+    // 获取最新的任务详情，确保数据是最新的
     const updatedTodo = await todoStore.fetchTodo(todo.id)
     if (updatedTodo) {
       selectedTodo.value = updatedTodo
@@ -145,14 +152,18 @@ const handleTodoClick = async (todo: Todo) => {
   }
 }
 
+// 关闭详情弹窗并清空选中的任务
 const closeDetailModal = () => {
   showDetailModal.value = false
   selectedTodo.value = null
 }
 
+// 处理编辑按钮点击
 const handleEdit = (todo: Todo) => {
   console.log('Handling edit for todo:', todo)
+  // 设置当前编辑的任务
   editingTodo.value = todo
+  // 用任务数据填充表单
   form.value = {
     title: todo.title,
     description: todo.description,
@@ -164,21 +175,24 @@ const handleEdit = (todo: Todo) => {
   showCreateModal.value = true
 }
 
+// 处理删除按钮点击
 const handleDelete = async (id: number) => {
   if (confirm('确定要删除这个任务吗？')) {
     await todoStore.deleteTodo(id)
-    // 如果正在显示被删除的todo的详情，关闭详情弹窗
+    // 如果正在显示被删除的任务的详情，关闭详情弹窗
     if (selectedTodo.value?.id === id) {
       closeDetailModal()
     }
   }
 }
 
+// 处理表单提交（创建/编辑任务）
 const handleSubmit = async () => {
   try {
     if (editingTodo.value) {
+      // 更新已有任务
       await todoStore.updateTodo(editingTodo.value.id, form.value)
-      // 如果正在显示被编辑的todo的详情，更新详情数据
+      // 如果正在显示被编辑的任务的详情，更新详情数据
       if (selectedTodo.value?.id === editingTodo.value.id) {
         const updatedTodo = await todoStore.fetchTodo(editingTodo.value.id)
         if (updatedTodo) {
@@ -186,6 +200,7 @@ const handleSubmit = async () => {
         }
       }
     } else {
+      // 创建新任务
       await todoStore.createTodo(form.value)
     }
     closeModal()
@@ -198,6 +213,7 @@ const handleSubmit = async () => {
   }
 }
 
+// 关闭创建/编辑弹窗并重置表单
 const closeModal = () => {
   showCreateModal.value = false
   editingTodo.value = null
@@ -208,10 +224,12 @@ const closeModal = () => {
   }
 }
 
+// 处理每页显示数量变化
 const handleSizeChange = async (size: number) => {
   await todoStore.fetchTodos({ page: 1, size })
 }
 
+// 处理页码变化
 const handleCurrentChange = async (page: number) => {
   await todoStore.fetchTodos({ page, size: todoStore.pageSize })
 }
